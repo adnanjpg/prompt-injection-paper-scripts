@@ -21,7 +21,7 @@
 // ```
 
 import ollama from 'ollama';
-import * as XLSX from 'https://unpkg.com/xlsx/xlsx.mjs';
+import * as XLSX from 'https://unpkg.com/xlsx@0.18.5/xlsx.mjs';
 
 const workbook = await Deno.readFile('./inputs/promptlar.xlsx');
 
@@ -42,73 +42,82 @@ type Response = {
     Category: string;
     Prompt: string;
     Llama3: string[];
+    Llama2: string[];
 };
+
+const writeResponsesToXlsx = async (responses: Response[]) => {
+    console.log('responses to be written are', responses);
+
+    const responsesMapped = responses.map(function (item) {
+        return {
+            Category: item.Category,
+            Prompt: item.Prompt,
+
+            'Llama3-1': item.Llama3[0],
+            'Llama3-2': item.Llama3[1],
+            'Llama3-3': item.Llama3[2],
+            'Llama3-4': item.Llama3[3],
+            'Llama3-5': item.Llama3[4],
+
+            'Llama2-1': item.Llama2[0],
+            'Llama2-2': item.Llama2[1],
+            'Llama2-3': item.Llama2[2],
+            'Llama2-4': item.Llama2[3],
+            'Llama2-5': item.Llama2[4],
+        };
+    });
+
+    const xlsxOut = XLSX.utils.json_to_sheet(responsesMapped);
+
+    // mkdir outputs
+    await Deno.mkdir('./outputs', { recursive: true });
+
+    const xlsxWritten = await XLSX.write(
+        { Sheets: { Sheet1: xlsxOut }, SheetNames: ['Sheet1'] },
+        { bookType: 'xlsx', type: 'array' }
+    );
+
+    // Convert xlsxWritten to Uint8Array
+    const xlsxData = new Uint8Array(xlsxWritten);
+
+    await Deno.writeFile('./outputs/ollama-responses.xlsx', xlsxData);
+};
+
+const models = ['llama3.2', 'llama2'];
+
+const triesForEachPrompt = 5;
+
 const responses: Response[] = [];
 
-for (const row of data.slice(0, 2)) {
+for (const row of data) {
+    const currentResponse: Response = {
+        Category: row.Category,
+        Prompt: row.Prompt,
+        Llama3: [],
+        Llama2: [],
+    };
+
     console.log('sending prompt: \n```\n' + row.Prompt + '\n```\nto ollama');
-    const models = ['llama2', 'llama3.2'];
     for (const model of models) {
         console.log('model is', model);
-        for (let i = 1; i <= 5; i++) {
+        for (let i = 1; i <= triesForEachPrompt; i++) {
             const response = await ollama.chat({
                 model,
                 messages: [{ role: 'user', content: row.Prompt }],
             });
 
-            let currentResponse = responses.find(
-                (r) => r.Category === row.Category && r.Prompt === row.Prompt
-            );
-
-            if (!currentResponse) {
-                currentResponse = {
-                    Category: row.Category,
-                    Prompt: row.Prompt,
-                    Llama3: [],
-                } as Response;
-                responses.push(currentResponse);
+            if (model === 'llama2') {
+                currentResponse.Llama2.push(response.message.content);
+            } else {
+                currentResponse.Llama3.push(response.message.content);
             }
-
-            currentResponse.Llama3.push(response.message.content);
         }
     }
+
+    responses.push(currentResponse);
+
+    await writeResponsesToXlsx(responses);
 }
-
-console.log('responses are', responses);
-
-const responsesMapped = responses.map(function (item) {
-    return {
-        Category: item.Category,
-        Prompt: item.Prompt,
-
-        'Llama3-1': item.Llama3[0],
-        'Llama3-2': item.Llama3[1],
-        'Llama3-3': item.Llama3[2],
-        'Llama3-4': item.Llama3[3],
-        'Llama3-5': item.Llama3[4],
-
-        'Llama2-1': item.Llama3[5],
-        'Llama2-2': item.Llama3[6],
-        'Llama2-3': item.Llama3[7],
-        'Llama2-4': item.Llama3[8],
-        'Llama2-5': item.Llama3[9],
-    };
-});
-
-const xlsxOut = XLSX.utils.json_to_sheet(responsesMapped);
-
-// mkdir outputs
-await Deno.mkdir('./outputs', { recursive: true });
-
-const xlsxWritten = await XLSX.write(
-    { Sheets: { Sheet1: xlsxOut }, SheetNames: ['Sheet1'] },
-    { bookType: 'xlsx', type: 'array' }
-);
-
-// Convert xlsxWritten to Uint8Array
-const xlsxData = new Uint8Array(xlsxWritten);
-
-await Deno.writeFile('./outputs/ollama-responses.xlsx', xlsxData);
 
 // exit
 Deno.exit(0);

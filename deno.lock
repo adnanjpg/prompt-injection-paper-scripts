@@ -1,5 +1,22 @@
 {
-  "version": "3",
+  "version": "4",
+  "specifiers": {
+    "npm:ollama@0.5.11": "0.5.11"
+  },
+  "npm": {
+    "ollama@0.5.11": {
+      "integrity": "sha512-lDAKcpmBU3VAOGF05NcQipHNKTdpKfAHpZ7bjCsElkUkmX7SNZImi6lwIxz/l1zQtLq0S3wuLneRuiXxX2KIew==",
+      "dependencies": [
+        "whatwg-fetch"
+      ]
+    },
+    "whatwg-fetch@3.6.20": {
+      "integrity": "sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg=="
+    }
+  },
+  "redirects": {
+    "https://unpkg.com/xlsx/xlsx.mjs": "https://unpkg.com/xlsx@0.18.5/xlsx.mjs"
+  },
   "remote": {
     "https://deno.land/std@0.211.0/assert/_constants.ts": "a271e8ef5a573f1df8e822a6eb9d09df064ad66a4390f21b3e31f820a38e0975",
     "https://deno.land/std@0.211.0/assert/_diff.ts": "6a2d68f2c42d73a1e31818a4195f40598d672c7f02ac75c7f1b1e6789852c2bc",
@@ -32,6 +49,12 @@
     "https://deno.land/std@0.211.0/assert/mod.ts": "325df8c0683ad83a873b9691aa66b812d6275fc9fec0b2d180ac68a2c5efed3b",
     "https://deno.land/std@0.211.0/assert/unimplemented.ts": "47ca67d1c6dc53abd0bd729b71a31e0825fc452dbcd4fde4ca06789d5644e7fd",
     "https://deno.land/std@0.211.0/assert/unreachable.ts": "38cfecb95d8b06906022d2f9474794fca4161a994f83354fd079cac9032b5145",
-    "https://deno.land/std@0.211.0/fmt/colors.ts": "be082d6a6bbb2980ae7b2bf8c23c6bb2811ba90a06a9bcb861344a71784c5a99"
+    "https://deno.land/std@0.211.0/fmt/colors.ts": "be082d6a6bbb2980ae7b2bf8c23c6bb2811ba90a06a9bcb861344a71784c5a99",
+    "https://unpkg.com/xlsx@0.18.5/xlsx.mjs": "992eec8c1a888e7f6c9b2a3cbba014bedade473da4cbd8fc9bb95de56a87f222"
+  },
+  "workspace": {
+    "dependencies": [
+      "npm:ollama@0.5.11"
+    ]
   }
 }

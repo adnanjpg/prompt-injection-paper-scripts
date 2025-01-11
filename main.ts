@@ -83,40 +83,57 @@ const writeResponsesToXlsx = async (responses: Response[]) => {
     await Deno.writeFile('./outputs/ollama-responses.xlsx', xlsxData);
 };
 
-const models = ['llama3.2', 'llama2'];
+const llama2Name = 'llama2';
+const llama3Name = 'llama3.2';
+const models = [llama3Name, llama2Name];
 
 const triesForEachPrompt = 5;
 
 const responses: Response[] = [];
 
-for (const row of data) {
-    const currentResponse: Response = {
-        Category: row.Category,
-        Prompt: row.Prompt,
-        Llama3: [],
-        Llama2: [],
-    };
+let i = 0;
 
-    console.log('sending prompt: \n```\n' + row.Prompt + '\n```\nto ollama');
-    for (const model of models) {
-        console.log('model is', model);
+const [from, to] = [0, data.length];
+
+const runForModel = async (model: string) => {
+    for (const row of data.slice(from, to)) {
+        const currentResponse: Response = {
+            Category: row.Category,
+            Prompt: row.Prompt,
+            Llama3: [],
+            Llama2: [],
+        };
+
+        console.log(
+            `sending ${i++}th prompt:` +
+                '\n```\n' +
+                row.Prompt +
+                '\n```\nto ollama'
+        );
+
+        // Then run llama3 for all
         for (let i = 1; i <= triesForEachPrompt; i++) {
             const response = await ollama.chat({
-                model,
+                model: model,
                 messages: [{ role: 'user', content: row.Prompt }],
             });
-
-            if (model === 'llama2') {
+            if (model === llama2Name)
                 currentResponse.Llama2.push(response.message.content);
-            } else {
+            else {
                 currentResponse.Llama3.push(response.message.content);
             }
+            // sleep for 1 seconds
+            await new Promise((resolve) => setTimeout(resolve, 2000));
         }
+
+        responses.push(currentResponse);
+
+        await writeResponsesToXlsx(responses);
     }
+};
 
-    responses.push(currentResponse);
-
-    await writeResponsesToXlsx(responses);
+for (const model of models) {
+    await runForModel(model);
 }
 
 // exit

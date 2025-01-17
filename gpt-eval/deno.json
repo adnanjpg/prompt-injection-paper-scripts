@@ -1,6 +1,7 @@
 {
   "tasks": {
-    "dev": "deno run --allow-read --allow-write --allow-net --allow-import main.ts"
+    "dev": "deno run --allow-read --allow-write --allow-net --allow-import main.ts",
+    "convert": "deno run --allow-read --allow-write convert_json_to_xlsx.ts"
   },
   "imports": {
     "ollama": "npm:ollama@0.5.11"

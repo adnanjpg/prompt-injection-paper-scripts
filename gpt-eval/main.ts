@@ -22,7 +22,7 @@ interface ScoreResult {
 }
 const resultsPath = `security_evaluation_results.json`;
 
-interface EvaluationResult {
+export interface EvaluationResult {
     model: string;
     category: string;
     prompt: string;

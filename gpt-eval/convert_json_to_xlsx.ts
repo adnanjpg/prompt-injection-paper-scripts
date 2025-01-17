@@ -1,12 +1,19 @@
 import * as XLSX from 'https://unpkg.com/xlsx@0.18.5/xlsx.mjs';
+import { EvaluationResult } from './main.ts';
 
 async function convertJsonToXlsx(jsonFilePath: string, xlsxFilePath: string) {
     // Read the JSON file
     const normalData = await Deno.readTextFile(jsonFilePath);
-    const jsonData = JSON.parse(normalData);
+    const jsonData = JSON.parse(normalData) as EvaluationResult[];
 
-    // Convert JSON data to an array of objects
-    const data = Array.isArray(jsonData) ? jsonData : [jsonData];
+    const data = jsonData.map((result) => {
+        return {
+            ...result,
+            sbs: Number.parseInt(result.sbs.score.toString()),
+            dme: Number.parseInt(result.dme.score.toString()),
+            rcr: Number.parseInt(result.rcr!.score.toString()),
+        };
+    });
 
     // Write the data to an XLSX file
     const workbook = XLSX.utils.book_new();

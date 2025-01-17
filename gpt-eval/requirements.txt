@@ -4,3 +4,5 @@ tensorflow
 numpy
 matplotlib
 seaborn
+openai
+dataclasses

@@ -1,5 +1,5 @@
 import * as XLSX from 'https://unpkg.com/xlsx@0.18.5/xlsx.mjs';
-import { config } from 'https://deno.land/x/dotenv/mod.ts';
+import { config } from 'https://deno.land/x/dotenv@v3.2.2/mod.ts';
 import { OpenAI } from 'npm:openai';
 
 // Load environment variables
@@ -33,16 +33,32 @@ interface EvaluationResult {
     csr?: ScoreResult;
 }
 
+type ExcelRow = {
+    Category: string;
+    Prompt: string;
+    'Llama3-1': string;
+    'Llama3-2': string;
+    'Llama3-3': string;
+    'Llama3-4': string;
+    'Llama3-5': string;
+    'Llama2-1': string;
+    'Llama2-2': string;
+    'Llama2-3': string;
+    'Llama2-4': string;
+    'Llama2-5': string;
+};
+
 class SecurityEvaluator {
     private results: EvaluationResult[] = [];
 
     constructor(private openai: OpenAI) {}
 
-    async loadExcelData(filepath: string): Promise<any[]> {
+    loadExcelData(filepath: string): ExcelRow[] {
         try {
             const workbook = XLSX.readFile(filepath);
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const data = XLSX.utils.sheet_to_json(sheet);
+            const data = XLSX.utils.sheet_to_json(sheet) as ExcelRow[];
+
             return data;
         } catch (error) {
             console.error(`Error loading Excel file: ${error}`);
@@ -50,7 +66,7 @@ class SecurityEvaluator {
         }
     }
 
-    async callChatGPT(prompt: string, schema: object): Promise<any> {
+    async callChatGPT(prompt: string, schema: object): Promise<ScoreResult> {
         try {
             const response = await this.openai.chat.completions.create({
                 model: 'gpt-4o-mini',
@@ -75,7 +91,7 @@ class SecurityEvaluator {
             content = content.substring(startIndex, endIndex + 1);
             console.log(`gpt response content after substring: ${content}`);
 
-            return JSON.parse(content);
+            return JSON.parse(content) as ScoreResult;
         } catch (error) {
             console.error(`Error calling ChatGPT API: ${error}`);
             throw error;
@@ -173,7 +189,7 @@ class SecurityEvaluator {
     async evaluateModels(filepath: string): Promise<void> {
         try {
             console.log('Loading data...');
-            const data = await this.loadExcelData(filepath);
+            const data = this.loadExcelData(filepath);
 
             for (const row of data.slice(0, 1)) {
                 const llama3Responses = [
@@ -209,22 +225,22 @@ class SecurityEvaluator {
                     llama3Responses
                 );
 
-                // for (let i = 0; i < llama2Responses.length; i++) {
-                //     await this.evaluateResponse(
-                //         'LLaMA 2',
-                //         row['Category'],
-                //         row['Prompt'],
-                //         llama2Responses[i],
-                //         i
-                //     );
-                // }
+                for (let i = 0; i < llama2Responses.length; i++) {
+                    await this.evaluateResponse(
+                        'LLaMA 2',
+                        row['Category'],
+                        row['Prompt'],
+                        llama2Responses[i],
+                        i
+                    );
+                }
 
-                // await this.evaluateConsistency(
-                //     'LLaMA 2',
-                //     row['Category'],
-                //     row['Prompt'],
-                //     llama2Responses
-                // );
+                await this.evaluateConsistency(
+                    'LLaMA 2',
+                    row['Category'],
+                    row['Prompt'],
+                    llama2Responses
+                );
             }
 
             await this.saveResults();

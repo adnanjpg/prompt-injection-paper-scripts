@@ -204,7 +204,7 @@ class SecurityEvaluator {
             console.log('Loading data...');
             const data = this.loadExcelData(filepath);
 
-            for (const row of data.slice(0, 2)) {
+            for (const row of data) {
                 // checl the file results path. if there's data for the same prompt, skip it
                 const existingResults = await Deno.readTextFile(resultsPath);
                 const existingResultsJson = JSON.parse(existingResults);

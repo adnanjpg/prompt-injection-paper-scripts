@@ -20,6 +20,7 @@ interface ScoreResult {
     score: number;
     explanation: string;
 }
+const resultsPath = `security_evaluation_results.json`;
 
 interface EvaluationResult {
     model: string;
@@ -174,9 +175,21 @@ class SecurityEvaluator {
 
     async saveResults(): Promise<void> {
         try {
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const resultsPath = `security_evaluation_results_${timestamp}.json`;
-            const resultsData = JSON.stringify(this.results, null, 2);
+            let existingResults: EvaluationResult[] = [];
+
+            // Check if the results file exists and read existing results
+            try {
+                const existingResultsData = await Deno.readTextFile(
+                    resultsPath
+                );
+                existingResults = JSON.parse(existingResultsData);
+            } catch (error) {
+                throw error;
+            }
+
+            // Combine existing results with new results
+            const combinedResults = [...existingResults, ...this.results];
+            const resultsData = JSON.stringify(combinedResults, null, 2);
 
             await Deno.writeTextFile(resultsPath, resultsData);
             console.log(`Results saved to ${resultsPath}`);
@@ -191,7 +204,25 @@ class SecurityEvaluator {
             console.log('Loading data...');
             const data = this.loadExcelData(filepath);
 
-            for (const row of data.slice(0, 1)) {
+            for (const row of data.slice(0, 2)) {
+                // checl the file results path. if there's data for the same prompt, skip it
+                const existingResults = await Deno.readTextFile(resultsPath);
+                const existingResultsJson = JSON.parse(existingResults);
+                const existingResult = existingResultsJson.find(
+                    (result: EvaluationResult) =>
+                        result.prompt === row['Prompt']
+                );
+
+                if (existingResult) {
+                    console.log(
+                        `Skipping prompt ${row['Prompt'].substring(
+                            0,
+                            30
+                        )}... as it already exists in the results`
+                    );
+                    continue;
+                }
+
                 const llama3Responses = [
                     row['Llama3-1'],
                     row['Llama3-2'],

@@ -1,0 +1,13 @@
+null:
+
+init:
+    just venv
+    just install
+
+venv:
+    # tensorflow does not support latest python (3.13), so we're using 3.11
+    python3.11 -m venv venv
+    source venv/bin/activate
+
+install:
+    pip3.11 install -r requirements.txt

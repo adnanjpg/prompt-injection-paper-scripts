@@ -70,6 +70,10 @@ class SecurityEvaluator {
         }
     }
 
+    setResults(results: EvaluationResult[]): void {
+        this.results = results;
+    }
+
     async callChatGPT(prompt: string): Promise<ScoreResult> {
         try {
             const securityEvaluationPrompt = `
@@ -104,7 +108,7 @@ You are tasked with evaluating responses based on three core security metrics. U
             });
 
             const response = await this.openai.chat.completions.create({
-                model: 'gpt-4o-mini',
+                model: 'gpt-4o',
                 messages: [
                     {
                         role: 'system',
@@ -209,22 +213,7 @@ You are tasked with evaluating responses based on three core security metrics. U
 
     async saveResults(): Promise<void> {
         try {
-            let existingResults: EvaluationResult[] = [];
-
-            // Check if the results file exists and read existing results
-            try {
-                const existingResultsData = await Deno.readTextFile(
-                    resultsPath
-                );
-                existingResults = JSON.parse(existingResultsData);
-                // deno-lint-ignore no-unused-vars
-            } catch (error) {
-                console.log('No existing results found');
-            }
-
-            // Combine existing results with new results
-            const combinedResults = [...existingResults, ...this.results];
-            const resultsData = JSON.stringify(combinedResults, null, 2);
+            const resultsData = JSON.stringify(this.results, null, 2);
 
             await Deno.writeTextFile(resultsPath, resultsData);
             console.log(`Results saved to ${resultsPath}`);
@@ -240,30 +229,6 @@ You are tasked with evaluating responses based on three core security metrics. U
             const data = this.loadExcelData(filepath);
 
             for (const row of data) {
-                try {
-                    // checl the file results path. if there's data for the same prompt, skip it
-                    const existingResults = await Deno.readTextFile(
-                        resultsPath
-                    );
-                    const existingResultsJson = JSON.parse(existingResults);
-                    const existingResult = existingResultsJson.find(
-                        (result: EvaluationResult) =>
-                            result.prompt === row['Prompt']
-                    );
-
-                    if (existingResult) {
-                        console.log(
-                            `Skipping prompt ${row['Prompt'].substring(
-                                0,
-                                30
-                            )}... as it already exists in the results`
-                        );
-                        continue;
-                    }
-                } catch (error) {
-                    console.error(`Error reading existing results: ${error}`);
-                }
-
                 const llama3Responses = [
                     row['Llama3-1'],
                     row['Llama3-2'],
@@ -317,7 +282,7 @@ You are tasked with evaluating responses based on three core security metrics. U
                 await this.saveResults(); // Save results after evaluating each prompt
             }
 
-            await this.saveResults();
+            // await this.saveResults();
             console.log('Evaluation completed successfully');
         } catch (error) {
             console.error(`Error in evaluation: ${error}`);
@@ -328,10 +293,14 @@ You are tasked with evaluating responses based on three core security metrics. U
 
 (async () => {
     try {
-        // if the results file doesn't exist, create it
-        await Deno.readTextFile(resultsPath);
-
+        await Deno.writeTextFile(resultsPath, '[]');
         const evaluator = new SecurityEvaluator(openai);
+
+        // load the results file, and load its content into the evaluator
+        const existingResults = await Deno.readTextFile(resultsPath);
+        const existingResultsJson = JSON.parse(existingResults);
+        evaluator.setResults(existingResultsJson);
+
         await evaluator.evaluateModels('inputs/combined-responses.xlsx');
     } catch (error) {
         console.error(`Error in main process: ${error}`);

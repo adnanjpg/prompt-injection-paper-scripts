@@ -11,7 +11,7 @@ async function convertJsonToXlsx(jsonFilePath: string, xlsxFilePath: string) {
             ...result,
             sbs: Number.parseInt(result.sbs.score.toString()),
             dme: Number.parseInt(result.dme.score.toString()),
-            rcr: Number.parseInt(result.rcr!.score.toString()),
+            rcr: Number.parseFloat(result.rcr!.score.toString()),
         };
     });
 

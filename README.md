@@ -445,8 +445,8 @@ ollama pull llama3.2
 ```
 
 **Problem:** Out of memory
-```bash
-# Solution: Process prompts in batches by modifying the [from, to] range in main.ts
+```typescript
+// Solution: Process prompts in batches by modifying the [from, to] range in main.ts
 const [from, to] = [0, 20];  // Process first 20 prompts
 ```
 

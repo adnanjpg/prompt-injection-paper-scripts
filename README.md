@@ -479,15 +479,3 @@ pip install pandas matplotlib seaborn jupyter
 **Problem:** File not found: security_evaluation_results.json
 - Solution: Run gpt-eval first to generate the results file
 - Ensure the file path in the notebook matches your directory structure
-
-## License
-
-Please refer to the repository license file for usage terms and conditions.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit issues or pull requests.
-
-## Citation
-
-If you use this project in your research, please cite accordingly.

@@ -133,7 +133,7 @@ The output file `outputs/ollama-responses.xlsx` contains:
 
 ### Notes
 
-- The program includes a 2-second delay between API calls to prevent rate limiting
+- The program includes a 2000ms (2-second) delay between API calls to prevent rate limiting
 - Progress is saved incrementally, so you can safely interrupt and resume
 - Total runtime depends on the number of prompts and models (approximately 2-3 hours for 80 prompts)
 
@@ -209,6 +209,7 @@ The program evaluates responses across three primary scales:
    ```bash
    # Using just (recommended)
    just init
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
 
    # Or manually
    python3.11 -m venv venv
@@ -221,8 +222,8 @@ The program evaluates responses across three primary scales:
 The program expects an input file at `inputs/combined-responses.xlsx` with the following columns:
 - Category
 - Prompt
-- Llama3-1 through Llama3-5
-- Llama2-1 through Llama2-5
+- Llama3-1, Llama3-2, Llama3-3, Llama3-4, Llama3-5 (five individual columns for LLaMA 3 responses)
+- Llama2-1, Llama2-2, Llama2-3, Llama2-4, Llama2-5 (five individual columns for LLaMA 2 responses)
 
 This file is typically the output from `llama-gen`.
 
@@ -446,7 +447,7 @@ ollama pull llama3.2
 **Problem:** Out of memory
 ```bash
 # Solution: Process prompts in batches by modifying the [from, to] range in main.ts
-const [from, to] = [0, 20];  # Process first 20 prompts
+const [from, to] = [0, 20];  // Process first 20 prompts
 ```
 
 ### gpt-eval Issues
